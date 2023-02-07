@@ -1,3 +1,4 @@
 noise_filtering: 1
 address:
-  "1": 0x7e
+  "2": 0x7e
+  "1": 0x7d

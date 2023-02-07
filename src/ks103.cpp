@@ -8,12 +8,15 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <thread>
+#include <mutex>
 
 #define SENSOR_NUM_MAX 20
 
 int noise_filtering;
+std::mutex i2c_mtx;
 
 bool set_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char value) {
+    i2c_mtx.lock();
     unsigned char outbuf[2];
     struct i2c_rdwr_ioctl_data  packets;
     struct i2c_msg  messages[1];
@@ -34,13 +37,16 @@ bool set_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned ch
     packets.nmsgs = 1;
     if ( ioctl(fd, I2C_RDWR, &packets) < 0 ) {
         perror("Unable to send data");
+        i2c_mtx.unlock();
         return false;
     }
 
+    i2c_mtx.unlock();
     return true;
 }
 
 bool get_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char *val) {
+    i2c_mtx.lock();
     unsigned char inbuf, outbuf;
     struct i2c_rdwr_ioctl_data  packets;
     struct i2c_msg  messages[2];
@@ -63,8 +69,10 @@ bool get_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned ch
     packets.nmsgs   = 2;
     if (ioctl(fd, I2C_RDWR, &packets) < 0 ) {
         perror("Unable to send data");
+        i2c_mtx.unlock();
         return false;
     }
+    i2c_mtx.unlock();
     *val = inbuf;
     return true;
 }
