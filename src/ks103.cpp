@@ -146,17 +146,18 @@ int main(int argc, char **argv)
   }
 
   ros::init(argc, argv, "ultrasound");
+  ros::NodeHandle n("~");
 
   ros::Rate loop_rate(1);
   int distance;
   while(ros::ok()){
     if(get_distance(i2c_handle,0x70,&distance)){
-      printf("dis:%d",distance);
+      ROS_INFO("dis:%d",distance);
     }
+    ros::spinOnce();
     loop_rate.sleep();
   }
 
-  // ros::NodeHandle n("~");
 
 
   // std::vector<int> sensor_address_vec;
