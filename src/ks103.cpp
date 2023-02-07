@@ -177,7 +177,7 @@ int main(int argc, char **argv)
 
     for(int i=0;i<SENSOR_NUM_MAX;i++){    
       int sensor_address;
-      if(n.getParam("address/"+std::to_string(i),sensor_address)){
+      if(n.getParam("address/"+std::to_string(i+1),sensor_address)){
         sensor_address_vec.push_back(sensor_address);
         printf("add:%x",sensor_address);
         ros::Publisher pub_tmp = n.advertise<sensor_msgs::Range>("range/"+std::to_string(i), 1000);
