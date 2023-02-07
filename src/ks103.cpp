@@ -195,11 +195,11 @@ int main(int argc, char **argv)
     for(int i=0;i<sensor_count;i++){
       // check_and_publish(i2c_handle, sensor_address_vec[i], pub_vec[i]);
       std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
-      threads.push_back(thread);
+      threads.push_back(std::move(thread));
     }
 
-    for(int i=0;i<sensor_count;i++){
-      threads[i].join();
+    for (std::thread &th: threads){
+        th.join();
     }
     // printf("before c&p");
     // check_and_publish(i2c_handle, sensor_address_vec[0], pub_vec[0]);
