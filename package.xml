@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ks103</name>
+  <name>ks103-ultrasound</name>
   <version>0.0.0</version>
   <description>The ks103 package</description>
 
