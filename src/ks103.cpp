@@ -13,7 +13,7 @@
 
 int noise_filtering;
 
-static int set_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char value) {
+bool set_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char value) {
     unsigned char outbuf[2];
     struct i2c_rdwr_ioctl_data  packets;
     struct i2c_msg  messages[1];
@@ -34,13 +34,13 @@ static int set_i2c_register(int fd, unsigned char addr, unsigned char reg, unsig
     packets.nmsgs = 1;
     if ( ioctl(fd, I2C_RDWR, &packets) < 0 ) {
         perror("Unable to send data");
-        return 1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-static int get_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char *val) {
+bool get_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char *val) {
     unsigned char inbuf, outbuf;
     struct i2c_rdwr_ioctl_data  packets;
     struct i2c_msg  messages[2];
@@ -63,47 +63,47 @@ static int get_i2c_register(int fd, unsigned char addr, unsigned char reg, unsig
     packets.nmsgs   = 2;
     if (ioctl(fd, I2C_RDWR, &packets) < 0 ) {
         perror("Unable to send data");
-        return 1;
+        return false;
     }
     *val = inbuf;
-    return 0;
+    return true;
 }
 
-static int get_distance(int fd, unsigned char addr, int *distance) {
+bool get_distance(int fd, unsigned char addr, int *distance) {
     unsigned char distance_high;
     unsigned char distance_low;
 
     set_i2c_register(fd, addr, 2, 0xbc);
     usleep(100000);     // 100ms
-    if (get_i2c_register(fd, addr, 2, &distance_high))
-        return 1;
+    if (!get_i2c_register(fd, addr, 2, &distance_high))
+        return false;
     *distance = distance_high << 8;
-    if (get_i2c_register(fd, addr, 3, &distance_low))
-        return 1;
+    if (!get_i2c_register(fd, addr, 3, &distance_low))
+        return false;
     *distance |= distance_low;
 
-    return 0;
+    return true;
 }
 
-static unsigned char change_address(int fd, unsigned char addr, unsigned char new_addr) {
-    if (set_i2c_register(fd, addr, 2, 0x9a)) {
-        return 1;
+bool change_address(int fd, unsigned char addr, unsigned char new_addr) {
+    if (!set_i2c_register(fd, addr, 2, 0x9a)) {
+        return false;
     }
     usleep(1000);  // 1ms
-    if (set_i2c_register(fd, addr, 2, 0x92)) {
-        return 1;
+    if (!set_i2c_register(fd, addr, 2, 0x92)) {
+        return false;
     }
     usleep(1000);  // 1ms
-    if (set_i2c_register(fd, addr, 2, 0x9e)) {
-        return 1;
+    if (!set_i2c_register(fd, addr, 2, 0x9e)) {
+        return false;
     }
     usleep(1000);  // 1ms
-    if (set_i2c_register(fd, addr, 2, new_addr)) {
-        return 1;
+    if (!set_i2c_register(fd, addr, 2, new_addr)) {
+        return false;
     }
     usleep(100000); // 100ms
 
-    return 0;
+    return true;
 
 }
 
