@@ -148,11 +148,21 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "ultrasound");
   ros::NodeHandle n("~");
 
+  ros::Publisher pub = n.advertise<sensor_msgs::Range>("range", 1000);
+
   ros::Rate loop_rate(1);
   int distance;
+  sensor_msgs::Range msg;
+  msg.radiation_type= sensor_msgs::Range::ULTRASOUND;
+  msg.field_of_view=0;
+  msg.min_range=0.020;
+  msg.max_range=11.280;
+      
   while(ros::ok()){
     if(get_distance(i2c_handle,0x70,&distance)){
       ROS_INFO("dis:%d",distance);
+      msg.range=distance/1000.0f;
+      pub.publish(msg);
     }
     ros::spinOnce();
     loop_rate.sleep();
