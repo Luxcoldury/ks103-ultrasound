@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 
   std::vector<int> sensor_address_vec;
   std::vector<ros::Publisher> pub_vec;
-  // std::vector<std::thread> threads;
+  std::vector<std::thread> threads;
 
   if (ros::ok()){
     n.param("noise_filtering",noise_filtering,1);
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
       if(n.getParam("address/"+std::to_string(i+1),sensor_address)){
         sensor_address_vec.push_back(sensor_address);
         // printf("add:%x",sensor_address);
-        ros::Publisher pub_tmp = n.advertise<sensor_msgs::Range>("range/"+std::to_string(i), 1000);
+        ros::Publisher pub_tmp = n.advertise<sensor_msgs::Range>("range/"+std::to_string(i+1), 1000);
         pub_vec.push_back(pub_tmp);
       }else{
         break;
@@ -193,13 +193,13 @@ int main(int argc, char **argv)
   if (ros::ok())
   {
     for(int i=0;i<sensor_count;i++){
-      check_and_publish(i2c_handle, sensor_address_vec[i], pub_vec[i]);
-      // std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
-      // threads.push_back(thread);
+      // check_and_publish(i2c_handle, sensor_address_vec[i], pub_vec[i]);
+      std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
+      threads.push_back(thread);
     }
 
     for(int i=0;i<sensor_count;i++){
-      // threads[i].join();
+      threads[i].join();
     }
     // printf("before c&p");
     // check_and_publish(i2c_handle, sensor_address_vec[0], pub_vec[0]);
