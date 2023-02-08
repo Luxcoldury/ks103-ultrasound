@@ -117,6 +117,21 @@ bool change_address(int fd, unsigned char addr, unsigned char new_addr) {
 }
 
 void check_and_publish(int i2c_handle, int address, ros::Publisher pub){
+  sensor_msgs::Range msg;
+  msg.radiation_type= sensor_msgs::Range::ULTRASOUND;
+  msg.field_of_view=0;
+  msg.min_range=0.020;
+  msg.max_range=11.280;
+
+  int distance;
+  if(get_distance(i2c_handle,address,&distance)){
+      // printf("dis:%d",distance);
+    msg.range=distance/1000.0f;
+    pub.publish(msg);
+  }
+}
+
+void check_and_publish_mode_0(int i2c_handle, int address, ros::Publisher pub){
   ros::Rate loop_rate(1);
 
   sensor_msgs::Range msg;
@@ -128,7 +143,7 @@ void check_and_publish(int i2c_handle, int address, ros::Publisher pub){
   while(ros::ok()){
     int distance;
     if(get_distance(i2c_handle,address,&distance)){
-      printf("%x dis:%d",address, distance);
+      // printf("dis:%d",distance);
       msg.range=distance/1000.0f;
       pub.publish(msg);
     }
@@ -184,7 +199,7 @@ int main(int argc, char **argv)
 
     if(fire_mode == 0){
       for(int i=0;i<sensor_count;i++){
-        std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
+        std::thread thread(check_and_publish_mode_0, i2c_handle, sensor_address_vec[i], pub_vec[i]);
         threads.push_back(std::move(thread));
       }
 
@@ -224,12 +239,11 @@ int main(int argc, char **argv)
         for(int j=0;j<fire_mod_n;j++){
           for(int i=j;i<sensor_count;i+=fire_mod_n){
             std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
-            ROS_INFO("%d fired",i);
             threads.push_back(std::move(thread));
           }
 
           for (std::thread &th: threads){
-            th.join();
+          th.join();
           }
         }
         loop_rate.sleep();
