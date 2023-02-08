@@ -127,6 +127,7 @@ void check_and_publish(int i2c_handle, int address, ros::Publisher pub){
   if(get_distance(i2c_handle,address,&distance)){
       // printf("dis:%d",distance);
     msg.range=distance/1000.0f;
+    msg.header.stamp=ros::Time();
     pub.publish(msg);
   }
 }
@@ -145,6 +146,7 @@ void check_and_publish_mode_0(int i2c_handle, int address, ros::Publisher pub){
     if(get_distance(i2c_handle,address,&distance)){
       // printf("dis:%d",distance);
       msg.range=distance/1000.0f;
+      msg.header.stamp=ros::Time();
       pub.publish(msg);
     }
   
@@ -222,6 +224,7 @@ int main(int argc, char **argv)
           if(get_distance(i2c_handle,sensor_address_vec[i],&distance)){
             // printf("dis:%d",distance);
             msg.range=distance/1000.0f;
+            msg.header.stamp=ros::Time();
             pub_vec[i].publish(msg);
           }
         }
