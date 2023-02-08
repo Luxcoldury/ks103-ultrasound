@@ -128,7 +128,7 @@ void check_and_publish(int i2c_handle, int address, ros::Publisher pub){
   while(ros::ok()){
     int distance;
     if(get_distance(i2c_handle,address,&distance)){
-      // printf("dis:%d",distance);
+      printf("%x dis:%d",address, distance);
       msg.range=distance/1000.0f;
       pub.publish(msg);
     }
@@ -224,6 +224,7 @@ int main(int argc, char **argv)
         for(int j=0;j<fire_mod_n;j++){
           for(int i=j;i<sensor_count;i+=fire_mod_n){
             std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
+            ROS_INFO("%d fired",i);
             threads.push_back(std::move(thread));
           }
 
