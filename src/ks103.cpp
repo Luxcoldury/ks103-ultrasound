@@ -11,9 +11,9 @@
 #include <mutex>
 
 #define SENSOR_NUM_MAX 20
-#define FIRE_MODE 0
 
 int noise_filtering;
+int fire_mode;
 std::mutex i2c_mtx;
 
 bool set_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char value) {
@@ -116,11 +116,7 @@ bool change_address(int fd, unsigned char addr, unsigned char new_addr) {
 
 }
 
-void check_and_publish_mode_0(int i2c_handle, int address, ros::Publisher pub){
-  
-  set_i2c_register(i2c_handle, address, 2, 0x69+noise_filtering); // Set noise filtering to level (0~6)
-  usleep(100000); // 100ms
-
+void check_and_publish(int i2c_handle, int address, ros::Publisher pub){
   ros::Rate loop_rate(1);
 
   sensor_msgs::Range msg;
@@ -160,6 +156,7 @@ int main(int argc, char **argv)
 
   if (ros::ok()){
     n.param("noise_filtering",noise_filtering,1);
+    n.param("fire_mode",fire_mode,0);
     // printf("nf:%d",noise_filtering);
 
     for(int i=0;i<SENSOR_NUM_MAX;i++){    
@@ -180,9 +177,14 @@ int main(int argc, char **argv)
 
   if (ros::ok())
   {
-    if(FIRE_MODE == 0){
+    for(int address:sensor_address_vec){
+      set_i2c_register(i2c_handle, address, 2, 0x69+noise_filtering); // Set noise filtering to level (0~6)
+    }
+    usleep(100000); // 100ms
+
+    if(fire_mode == 0){
       for(int i=0;i<sensor_count;i++){
-        std::thread thread(check_and_publish_mode_0, i2c_handle, sensor_address_vec[i], pub_vec[i]);
+        std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
         threads.push_back(std::move(thread));
       }
 
@@ -191,18 +193,13 @@ int main(int argc, char **argv)
       }
     }
 
-    if(FIRE_MODE == 1){ // 按顺序fire
-      for(int address:sensor_address_vec){
-        set_i2c_register(i2c_handle, address, 2, 0x69+noise_filtering); // Set noise filtering to level (0~6)
-      }
-
+    if(fire_mode == 1){ // Sequancial firing
       sensor_msgs::Range msg;
       msg.radiation_type= sensor_msgs::Range::ULTRASOUND;
       msg.field_of_view=0;
       msg.min_range=0.020;
       msg.max_range=11.280;
 
-      usleep(100000); // 100ms
       ros::Rate loop_rate(1);
       while(ros::ok()){
         int distance;
@@ -211,6 +208,27 @@ int main(int argc, char **argv)
             // printf("dis:%d",distance);
             msg.range=distance/1000.0f;
             pub_vec[i].publish(msg);
+          }
+        }
+        loop_rate.sleep();
+      }
+    }
+
+    if(fire_mode == 2){ // Mod N firing
+      int fire_mod_n;
+      n.param("fire_mod_n",fire_mod_n,1);
+
+      ros::Rate loop_rate(1);
+
+      while(ros::ok()){
+        for(int j=0;j<fire_mod_n;j++){
+          for(int i=j;i<sensor_count;i+=fire_mod_n){
+            std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
+            threads.push_back(std::move(thread));
+          }
+
+          for (std::thread &th: threads){
+            th.join();
           }
         }
         loop_rate.sleep();
