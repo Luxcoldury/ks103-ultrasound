@@ -2,5 +2,7 @@ noise_filtering: 1
 fire_mode: 2
 fire_mod_n: 2
 address:
-  "2": 0x7e
-  "1": 0x7d
+  "1": 0x77
+  "2": 0x7c
+  "3": 0x7d
+  "4": 0x7e
