@@ -243,8 +243,9 @@ int main(int argc, char **argv)
           }
 
           for (std::thread &th: threads){
-          th.join();
+            th.join();
           }
+          threads.clear();
         }
         loop_rate.sleep();
       }
