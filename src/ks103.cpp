@@ -11,6 +11,7 @@
 #include <mutex>
 
 #define SENSOR_NUM_MAX 20
+#define FIRE_MODE 0
 
 int noise_filtering;
 std::mutex i2c_mtx;
@@ -115,7 +116,7 @@ bool change_address(int fd, unsigned char addr, unsigned char new_addr) {
 
 }
 
-void check_and_publish(int i2c_handle, int address, ros::Publisher pub){
+void check_and_publish_mode_0(int i2c_handle, int address, ros::Publisher pub){
   
   set_i2c_register(i2c_handle, address, 2, 0x69+noise_filtering); // Set noise filtering to level (0~6)
   usleep(100000); // 100ms
@@ -153,28 +154,6 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "ultrasound");
   ros::NodeHandle n("~");
 
-  // ros::Publisher pub = n.advertise<sensor_msgs::Range>("range", 1000);
-
-  // ros::Rate loop_rate(1);
-  // int distance;
-  // sensor_msgs::Range msg;
-  // msg.radiation_type= sensor_msgs::Range::ULTRASOUND;
-  // msg.field_of_view=0;
-  // msg.min_range=0.020;
-  // msg.max_range=11.280;
-      
-  // while(ros::ok()){
-  //   if(get_distance(i2c_handle,0x70,&distance)){
-  //     ROS_INFO("dis:%d",distance);
-  //     msg.range=distance/1000.0f;
-  //     pub.publish(msg);
-  //   }
-  //   ros::spinOnce();
-  //   loop_rate.sleep();
-  // }
-
-
-
   std::vector<int> sensor_address_vec;
   std::vector<ros::Publisher> pub_vec;
   std::vector<std::thread> threads;
@@ -198,19 +177,45 @@ int main(int argc, char **argv)
 
   int sensor_count=sensor_address_vec.size();
 
+
   if (ros::ok())
   {
-    for(int i=0;i<sensor_count;i++){
-      // check_and_publish(i2c_handle, sensor_address_vec[i], pub_vec[i]);
-      std::thread thread(check_and_publish, i2c_handle, sensor_address_vec[i], pub_vec[i]);
-      threads.push_back(std::move(thread));
+    if(FIRE_MODE == 0){
+      for(int i=0;i<sensor_count;i++){
+        std::thread thread(check_and_publish_mode_0, i2c_handle, sensor_address_vec[i], pub_vec[i]);
+        threads.push_back(std::move(thread));
+      }
+
+      for (std::thread &th: threads){
+          th.join();
+      }
     }
 
-    for (std::thread &th: threads){
-        th.join();
+    if(FIRE_MODE == 1){ // 按顺序fire
+      for(int address:sensor_address_vec){
+        set_i2c_register(i2c_handle, address, 2, 0x69+noise_filtering); // Set noise filtering to level (0~6)
+      }
+
+      sensor_msgs::Range msg;
+      msg.radiation_type= sensor_msgs::Range::ULTRASOUND;
+      msg.field_of_view=0;
+      msg.min_range=0.020;
+      msg.max_range=11.280;
+
+      usleep(100000); // 100ms
+      ros::Rate loop_rate(1);
+      while(ros::ok()){
+        int distance;
+        for(int i=0;i<sensor_count;i++){
+          if(get_distance(i2c_handle,sensor_address_vec[i],&distance)){
+            // printf("dis:%d",distance);
+            msg.range=distance/1000.0f;
+            pub_vec[i].publish(msg);
+          }
+        }
+        loop_rate.sleep();
+      }
     }
-    // printf("before c&p");
-    // check_and_publish(i2c_handle, sensor_address_vec[0], pub_vec[0]);
 
   }
 
