@@ -24,4 +24,4 @@ Set the params in `launch/example.yml`, then
 roslaunch ks103-ultrasound example.launch
 ```
 
-Range are advertised in topics `range/i` (`sensor_msgs/Range`), in which `i` being the index of each ks103 set in `launch/example.yml`.
+Range are advertised in topics `~/range/i` (`sensor_msgs/Range`), in which `i` being the index of each ks103 set in `launch/example.yml`.
