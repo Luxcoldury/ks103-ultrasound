@@ -14,6 +14,7 @@
 
 int noise_filtering;
 int fire_mode;
+double freq;
 std::mutex i2c_mtx;
 
 bool set_i2c_register(int fd, unsigned char addr, unsigned char reg, unsigned char value) {
@@ -133,7 +134,7 @@ void check_and_publish(int i2c_handle, int address, ros::Publisher pub){
 }
 
 void check_and_publish_mode_0(int i2c_handle, int address, ros::Publisher pub){
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(freq);
 
   sensor_msgs::Range msg;
   msg.radiation_type= sensor_msgs::Range::ULTRASOUND;
@@ -174,6 +175,7 @@ int main(int argc, char **argv)
   if (ros::ok()){
     n.param("noise_filtering",noise_filtering,1);
     n.param("fire_mode",fire_mode,0);
+    n.param("freq",freq,0.0);
     // printf("nf:%d",noise_filtering);
 
     for(int i=0;i<SENSOR_NUM_MAX;i++){    
@@ -217,7 +219,7 @@ int main(int argc, char **argv)
       msg.min_range=0.020;
       msg.max_range=11.280;
 
-      ros::Rate loop_rate(1);
+      ros::Rate loop_rate(freq);
       while(ros::ok()){
         int distance;
         for(int i=0;i<sensor_count;i++){
@@ -236,7 +238,7 @@ int main(int argc, char **argv)
       int fire_mod_n;
       n.param("fire_mod_n",fire_mod_n,1);
 
-      ros::Rate loop_rate(1);
+      ros::Rate loop_rate(freq);
 
       while(ros::ok()){
         for(int j=0;j<fire_mod_n;j++){
