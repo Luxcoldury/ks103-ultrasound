@@ -1,3 +1,7 @@
+# Path to I2C device
+# Should be surrounded by ""
+i2d_device_path: "/dev/i2c-1"
+
 # Noise filtering level： 1～5
 # 5 gives narrowest POV
 noise_filtering: 5

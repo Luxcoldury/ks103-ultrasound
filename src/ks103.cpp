@@ -159,11 +159,6 @@ int main(int argc, char **argv)
 {
 	int i2c_handle;
 
-  if ((i2c_handle = open("/dev/i2c-1", O_RDWR)) < 0) 
-  {
-    ROS_ERROR("Failed to open I2C bus of Ultrasound");
-    exit(1);
-  }
 
   ros::init(argc, argv, "ultrasound");
   ros::NodeHandle n("~");
@@ -173,10 +168,19 @@ int main(int argc, char **argv)
   std::vector<std::thread> threads;
 
   if (ros::ok()){
+    std::string i2d_device_path;
+
+    n.param("i2d_device_path",i2d_device_path,std::string("/dev/i2c-1"));
     n.param("noise_filtering",noise_filtering,1);
     n.param("fire_mode",fire_mode,0);
     n.param("freq",freq,0.0);
     // printf("nf:%d",noise_filtering);
+
+    if ((i2c_handle = open(i2d_device_path.c_str(), O_RDWR)) < 0) 
+    {
+      ROS_ERROR("Failed to open I2C bus of Ultrasound");
+      exit(1);
+    }
 
     for(int i=0;i<SENSOR_NUM_MAX;i++){    
       int sensor_address;
