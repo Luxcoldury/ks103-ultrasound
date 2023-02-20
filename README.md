@@ -1,10 +1,10 @@
 # ROS driver for ks103 Ultrasound Range Finder
 
-This ros package is designed to drive multiple ks103 sensors on a RaspberryPi.
+This ros package is designed to drive multiple ks103 sensors through linux I2C interface.
 
 ## Prerequisites
 
-1. A RaspberryPi, having Ubuntu, ROS installed
+1. Have Ubuntu, ROS installed
 2. Having permission to i2c device (test by running `i2c-detect -y 1`, you will need `i2c-tools` for this). The following commands help grant i2c permission to user.
 
     ```bash
