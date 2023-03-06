@@ -25,6 +25,6 @@ freq: 1.0
 # Support up to 20 sensors, since ks103 can only be configured to 20 different addresses
 address:
   "1": 0x77
-  "2": 0x7c
-  "3": 0x7d
-  "4": 0x7e
+  # "2": 0x7c
+  # "3": 0x7d
+  # "4": 0x7e
